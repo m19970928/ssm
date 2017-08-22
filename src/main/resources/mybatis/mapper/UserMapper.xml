@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+ "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ 
+ 
+<mapper namespace="com.shop.user.dao.UserDao">
+
+	<!-- 根据用户名查询用户信息 -->
+	<select id="selectUserByUsername" resultType="com.shop.user.entity.User">
+		SELECT * FROM `user` WHERE username=#{username}
+	</select>
+	
+	<!-- 根据用户激活码查询用户 -->
+	<select id="selectUserByCode" resultType="com.shop.user.entity.User">
+		SELECT * FROM `user` where code=#{code}
+	</select>
+	
+	<!-- 查询全部用户 -->
+	<select id="selectUserAll" resultType="com.shop.user.entity.User">
+		SELECT * FROM `user`
+	</select>
+		
+	<!-- 查询用户详细信息，根据uid -->
+	<select id="selectUserByUid" resultType="com.shop.user.entity.User">
+		SELECT * FROM `user` where uid=#{uid}
+	</select>
+
+	<!-- 添加用户 -->
+	<insert id="insertUser" useGeneratedKeys="true" keyProperty="id">
+		insert into user(username,password,name,email,phone,address,state,code) 
+		values(#{username},#{password},#{name},#{email},#{phone},#{address},#{state},#{code});
+	</insert>
+	
+	<!-- 删除用户，根据uid -->
+	<delete id="deleteUserByUid">
+		delete from user where uid=#{uid}
+	</delete>
+	
+	<!-- 修改用户，根据uid -->
+	<update id="updateUser">
+		UPDATE USER SET username = #{username},password = #{password},
+			 name = #{name}, email = #{email}, phone = #{phone}, 
+			 address = #{address}, state=#{state}, code=#{code}
+		WHERE
+			uid = #{uid}
+	</update>
+	
+	
+</mapper>
