@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+ "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ 
+ 
+<mapper namespace="com.shop.order.dao.OrderDao">
+
+	<!-- public void insertOrder(Order order); -->
+	<insert id="insertOrder" useGeneratedKeys="true" keyProperty="oid">
+		INSERT INTO `order`
+		 (total, state, uid)
+		VALUES (#{total}, 1, #{user.uid})
+	</insert>
+		
+	<!-- public void insertOrderItem(OrderItem orderItem); -->
+	<insert id="insertOrderItem" useGeneratedKeys="true" keyProperty="itemid">
+		INSERT INTO `orderitem` 
+			(count, subtotal, pid, oid)
+		VALUES
+			(#{count}, #{subtotal}, #{product.pid}, #{order.oid})
+	</insert>
+	
+	<!-- public List<Order> selectOrderByUid(Integer uid); -->
+	<select id="selectOrderByUid" resultMap="orderAndUserAndOrderItemsAndProduct">
+		SELECT
+			o.oid, o.total, o.ordertime, o.state, u.name, u.phone, u.address, u.uid,
+			i.subtotal, i.count, i.itemid, p.pid, p.pname, p.image, p.shop_price
+		FROM `order` o
+		JOIN `user` u ON o.uid=u.uid
+		JOIN orderitem i ON	o.oid=i.oid
+		JOIN product p ON	i.pid=p.pid
+		WHERE o.uid = #{uid}
+	</select>
+	
+	<!-- public Order selectOrderByOid(Integer oid); -->
+	<select id="selectOrderByOid" resultMap="orderAndUserAndOrderItemsAndProduct">
+		SELECT
+			o.oid, o.total, o.ordertime, o.state, u.name, u.phone, u.address, u.uid,
+			i.subtotal, i.count, i.itemid, p.pid, p.pname, p.image, p.shop_price
+		FROM `order` o
+		JOIN `user` u ON o.uid=u.uid
+		JOIN orderitem i ON	o.oid=i.oid
+		JOIN product p ON	i.pid=p.pid
+		WHERE o.oid = #{oid}		
+	</select>
+	
+	<!-- public void updateOrder(Order order); -->
+	<update id="updateOrder">
+		UPDATE `order` SET state = #{state} WHERE oid = #{oid}
+	</update>
+	
+	
+	<!-- public int selectOrderCountAll(); -->
+	<select id="selectOrderCountAll" resultType="int">
+		select COUNT(*) FROM `order`
+	</select>
+	
+	<!-- public List<Order> selectOrderAll(int begin, int limit); -->
+	<select id="selectOrderAll" resultType="com.shop.order.entity.Order">
+		SELECT * FROM `order` limit #{begin}, #{limit}
+	</select>
+	
+	<!-- public List<OrderItem> selectOrderItem(Integer oid); -->
+	<select id="selectOrderItem" resultMap="orderItemsAndProduct">
+		SELECT oi.itemid, oi.count, oi.subtotal, p.pid, p.pname, p.image, p.shop_price 
+		FROM orderitem oi JOIN product p ON oi.pid=p.pid WHERE oi.oid=#{oid}
+	</select>	
+	
+	<!-- 订单和用户和订单条目和商品信息 -->
+	<resultMap type="com.shop.order.entity.Order" id="orderAndUserAndOrderItemsAndProduct">
+		<id column="oid" property="oid"/>
+		<result column="total" property="total"/>
+		<result column="ordertime" property="ordertime"/>
+		<result column="state" property="state"/>
+		<!-- 订单和用户之间 -->
+		<association property="user" javaType="com.shop.user.entity.User">
+			<id column="uid" property="uid"/>
+			<result column="name" property="name"/>
+			<result column="phone" property="phone"/>
+			<result column="address" property="address"/>
+		</association>
+		<!-- 订单和条目之间 -->
+		<collection property="orderItems" ofType="com.shop.order.entity.OrderItem">
+			<id column="itemid" property="itemid"/>
+			<result column="subtotal" property="subtotal"/>
+			<result column="count" property="count"/>
+			<!-- 条目和商品之间 -->
+			<association property="product" javaType="com.shop.product.entity.Product">
+				<id column="pid" property="pid"/>
+				<result column="pname" property="pname"/>
+				<result column="image" property="image"/>
+				<result column="shop_price" property="shopPrice"/>
+			</association>
+		</collection>
+	</resultMap>
+	
+	<!-- 条目和商品之间 -->
+	<resultMap type="com.shop.order.entity.OrderItem" id="orderItemsAndProduct">
+		<id column="itemid" property="itemid"/>
+		<result column="subtotal" property="subtotal"/>
+		<result column="count" property="count"/>
+		<!-- 条目和商品之间 -->
+		<association property="product" javaType="com.shop.product.entity.Product">
+			<id column="pid" property="pid"/>
+			<result column="pname" property="pname"/>
+			<result column="image" property="image"/>
+			<result column="shop_price" property="shopPrice"/>
+		</association>
+	</resultMap>
+</mapper>
