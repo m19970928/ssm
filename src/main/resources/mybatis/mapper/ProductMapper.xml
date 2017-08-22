@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+ "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+<mapper namespace="com.shop.product.dao.ProductDao">
+
+	<!-- 根据cid，分页查询该一级分类下的所有商品，返回商品信息包括一级二级分类信息 -->
+	<select id="selectProductByCid" resultMap="productAndCsAndC">
+		SELECT
+			c.cid, c.cname, cs.csid, cs.csname, p.pid, p.pname, p.image, p.is_hot hot, 
+			p.market_price marketPrice, p.shop_price shopPrice, p.pdate, p.pdesc
+		FROM categorysecond cs
+		JOIN product p
+		ON cs.csid=p.csid
+		JOIN category c
+		ON cs.cid=c.cid
+		WHERE c.cid=#{cid}
+		LIMIT #{begin}, #{limit}
+		
+	</select>
+	
+	<!-- 根据csid，分页查询二级分类下的所有商品，返回商品信息包括二级分类信息 -->
+	<select id="selectProductByCsid" resultMap="productAndCs">
+		SELECT
+			cs.csid, cs.csname, p.pid, p.pname, p.image, p.is_hot hot, 
+			p.market_price marketPrice, p.shop_price shopPrice, p.pdate, p.pdesc
+		FROM categorysecond cs
+		JOIN product p
+		ON cs.csid=p.csid
+		WHERE cs.csid=#{csid}
+	</select>
+
+	<!-- 根据pid，查询商品详细信息 -->
+	<select id="selectProductByPid" resultMap="productAndCs">
+		SELECT
+			p.pid,pname, p.image, p.is_hot hot, p.market_price marketPrice, p.shop_price shopPrice, 
+			p.pdate,pdesc, cs.csid, cs.csname
+		FROM product p
+		JOIN categorysecond cs
+		ON p.csid=cs.csid
+		WHERE p.pid=#{pid}
+	</select>
+
+	<!-- 根据hot，查询商品是否热门，取前10个 -->
+	<select id="selectProductByHot" resultType="com.shop.product.entity.Product">
+		SELECT
+			pid,pname,image,is_hot hot,market_price marketPrice,shop_price shopPrice,pdate,pdesc
+		FROM product
+		WHERE is_hot = 1
+		ORDER BY pdate DESC
+		limit 10
+	</select>
+	
+	<!-- 根据pdate，查询商品前10个 -->
+	<select id="selectProductByPdate" resultType="com.shop.product.entity.Product">
+		SELECT
+			pid,pname,image,is_hot hot,market_price marketPrice,shop_price shopPrice,pdate,pdesc
+		FROM product
+		ORDER BY pdate DESC
+		limit 10
+	</select>
+
+	<!-- 分页查询所有商品 -->
+	<select id="selectProductAll" resultMap="productAndCsAndC">
+		SELECT
+			c.cid, c.cname, cs.csid, cs.csname, p.pid, p.pname, p.image, p.is_hot hot, 
+			p.market_price marketPrice, p.shop_price shopPrice, p.pdate, p.pdesc
+		FROM categorysecond cs
+		JOIN product p
+		ON cs.csid=p.csid
+		JOIN category c
+		ON cs.cid=c.cid
+		ORDER BY pid
+		LIMIT #{begin}, #{limit}
+	</select>
+	
+	<!-- 添加商品 -->
+	<insert id="insertProduct" useGeneratedKeys="true" keyProperty="pid">
+		INSERT INTO product(pname, market_price, shop_price, image, pdesc, is_hot, csid)
+		VALUES(#{pname},#{marketPrice},#{shopPrice},#{image},#{pdesc},#{hot},#{categorySecond.csid})
+	</insert>
+	<!-- 删除商品 -->
+	<delete id="deleteProductByPid">
+		DELETE FROM product WHERE pid=#{pid}
+	</delete>
+	<!-- 修改商品 -->
+	<update id="updateProduct">
+		UPDATE product SET pname=#{pname}, market_price=#{marketPrice}, shop_price=#{shopPrice},
+		image=#{image}, pdesc=#{pdesc}, is_hot=#{hot}, csid=#{categorySecond.csid}
+		WHERE pid=#{pid}
+	</update>
+	
+	<!-- 根据cid，查询该一级分类下的商品总数 -->
+	<select id="findProductCountByCid" resultType="int">
+		SELECT
+			COUNT(*)
+		FROM
+			categorysecond cs
+		JOIN product p ON cs.csid = p.csid
+		JOIN category c ON cs.cid = c.cid
+		WHERE
+			c.cid = #{cid}
+	</select>
+	
+	<!-- 查询商品总数 -->
+	<select id="findProductCountAll" resultType="int">
+		SELECT
+			COUNT(*)
+		FROM
+			product
+	</select>
+
+	<!-- 映射商品二级分类一级分类 -->
+	<resultMap type="com.shop.product.entity.Product" id="productAndCsAndC">
+		<id column="pid" property="pid"></id>
+ 		<result column="pname" property="pname"/>
+		<result column="image" property="image"/>
+		<result column="hot" property="hot"/>
+		<result column="marketPrice" property="marketPrice"/>
+		<result column="shopPrice" property="shopPrice"/>
+		<result column="pdate" property="pdate"/>
+		<result column="pdesc" property="pdesc"/> 
+	
+		<association property="categorySecond" javaType="com.shop.category.entity.CategorySecond">
+			<id column="csid" property="csid" />
+ 			<result column="csname" property="csname"/> 
+			<association property="category" javaType="com.shop.category.entity.Category">
+				 <id column="cid" property="cid" />
+			     <result column="cname" property="cname"/> 
+			</association>
+		</association>	
+	</resultMap>
+	
+	<!-- 映射商品二级分类 -->
+	<resultMap type="com.shop.product.entity.Product" id="productAndCs">
+		<id column="pid" property="pid"></id>
+ 		<result column="pname" property="pname"/>
+		<result column="image" property="image"/>
+		<result column="hot" property="hot"/>
+		<result column="marketPrice" property="marketPrice"/>
+		<result column="shopPrice" property="shopPrice"/>
+		<result column="pdate" property="pdate"/>
+		<result column="pdesc" property="pdesc"/> 
+	
+		<association property="categorySecond" javaType="com.shop.category.entity.CategorySecond">
+			<id column="csid" property="csid" />
+ 			<result column="csname" property="csname"/> 
+		</association>	
+	</resultMap>
+	
+
+</mapper>
