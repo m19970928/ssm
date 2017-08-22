@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+ "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+<mapper namespace="com.shop.category.dao.CategoryDao">
+
+	<!-- 不分页查询全部一级分类同时查询所属的二级分类 -->
+	<select id="selectCategoryAll" resultMap="categoryAndCs">
+		SELECT c.cid, c.cname, cs.csname, cs.csid
+		FROM category c	JOIN categorysecond cs ON c.cid=cs.cid
+	</select>
+
+	<!-- 分页查询全部一级分类 -->
+	<select id="selectCategory" resultType="com.shop.category.entity.Category">
+		SELECT cid, cname FROM category LIMIT #{begin}, #{limit}
+	</select>
+
+	<!-- 根据cid查询一级分类详细信息 -->
+	<select id="selectCategoryByCid" resultType="com.shop.category.entity.Category">
+		SELECT cid, cname FROM category WHERE cid=#{cid}
+	</select>
+	
+	<!-- 添加一级分类，并将自动生成的主键保存到cid中 -->
+	<insert id="insertCategory" keyProperty="cid" useGeneratedKeys="true">
+		INSERT INTO category (cname) VALUES(#{cname})
+	</insert>
+	
+	<!-- 修改一级分类的名称，根据cid -->
+	<update id="updateCategory">
+		UPDATE category SET cname=#{cname} WHERE cid=#{cid}
+	</update>
+	
+	<!-- 删除一级分类，根据cid -->
+	<delete id="deleteCategory">
+		DELETE FROM category WHERE cid=#{cid}
+	</delete>
+
+	<!-- 删除二级分类。根据cid -->
+	<delete id="deleteCategorySecondByCid">
+		DELETE FROM	categorysecond WHERE cid = #{cid}
+	</delete>
+
+	<!-- 删除二级分类，根据csid -->
+	<delete id="deleteCategorySecondByCsid">
+		DELETE FROM	categorysecond WHERE csid = #{csid}
+	</delete>
+	
+	<!-- 不分页查询全部二级分类 -->
+	<select id="selectCategorySecondsAll" resultType="com.shop.category.entity.CategorySecond">
+		SELECT csid, csname FROM categorysecond
+	</select>
+	
+	<!-- 分页查询全部二级分类 -->
+	<select id="selectCategorySeconds" resultType="com.shop.category.entity.CategorySecond">
+		SELECT csid, csname FROM categorysecond LIMIT #{begin}, #{limit}
+	</select>
+	
+	<!-- 添加二级分类 -->
+	<insert id="insertCategorySecond" keyProperty="csid" useGeneratedKeys="true">
+		INSERT INTO categorysecond (csname, cid)
+		VALUES(#{csname}, #{category.cid})
+	</insert>
+	
+	<!-- 修改二级分类，根据csid -->
+	<update id="updateCategorySecond">
+		UPDATE categorysecond SET csname = #{csname}, cid = #{category.cid}
+		WHERE csid = #{csid}
+	</update>	
+	
+	<!-- 根据csid查询二级分类详细信息包括上级分类的信息 -->
+	<select id="selectCateogrySecondByCsid" resultMap="CsAndCategory">
+		SELECT c.cid, c.cname, cs.csname, cs.csid
+		FROM categorysecond cs JOIN category c ON c.cid=cs.cid
+		WHERE csid=#{csid}
+	</select>
+	
+	<!-- 查询一级分类的总数 -->
+	<select id="findCategoryCount" resultType="int">
+		SELECT count(*) FROM category
+	</select>
+	
+	<!-- 查询二级分类的总数 -->
+	<select id="findCategorySecondCount" resultType="int">
+		SELECT count(*) FROM categorysecond
+	</select>
+	
+	
+	<!-- rsultMap:查询一级分类同时查询所属二级分类 -->
+	<resultMap type="com.shop.category.entity.Category" id="categoryAndCs">
+		<id property="cid" column="cid"/>
+		<result property="cname" column="cname"/>
+		<!-- 映射二级分类 -->
+		<collection property="categorySeconds" ofType="com.shop.category.entity.CategorySecond">
+			<id column="csid" property="csid"/>
+			<result property="csname" column="csname"/>
+		</collection>
+	</resultMap>
+	
+	<!-- rsultMap:查询二级分类同时查询所属一级分类 -->
+	<resultMap type="com.shop.category.entity.CategorySecond" id="CsAndCategory">
+		<id property="csid" column="csid"/>
+		<result property="csname" column="csname"/>
+		<!-- 映射一级分类 -->
+		<association property="category" javaType="com.shop.category.entity.Category">
+			<id column="cid" property="cid"/>
+			<result property="cname" column="cname"/>
+		</association>
+	</resultMap>
+</mapper>
